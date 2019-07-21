@@ -58,7 +58,7 @@ size_t precount_tokens(char *buffer) {
 
 int parse_tokens(token_t *tokens, char *buffer) {
   char *curr = buffer, *last = buffer;
-  size_t cnt = 0, section_cnt = 0;
+  size_t cnt = 0, section_cnt = 1;
   while(*curr) {
     if(*curr == '#') {
       pass_comment(&curr);
@@ -118,10 +118,13 @@ void config_create(config_t *config, char *fn) {
   if (buffer) {
     size_t token_count = precount_tokens(buffer);
     token_t *tokens = (token_t *) malloc(sizeof(token_t) * token_count);
-    size_t section_counter = -1, pair_counter;
+    size_t section_counter = 0, pair_counter;
     config->section_count = parse_tokens(tokens, buffer);
     config->sections = (section_t *) malloc(sizeof(section_t) * 
     config->section_count);
+
+    section_create(&config->sections[0], ""); // first section without a name
+                                              // global variables
 
     for(int i = 0; i < token_count; i++) {
       // printf("%d\n", tokens[i].type);
@@ -145,8 +148,10 @@ void config_create(config_t *config, char *fn) {
       config->sections[i].pairs = (pair_t *) malloc(sizeof(pair_t) * 
       config->sections[i].pair_count);
     }
+    
+    section_counter = 0, pair_counter = 0;
 
-    for(int i = 0, section_counter = -1; i < token_count; i++) {
+    for(int i = 0; i < token_count; i++) {
       // printf("%d\n", tokens[i].type);
       if(tokens[i].type == token_type_lbracket) {
         ++section_counter;
@@ -184,6 +189,33 @@ section_t *config_get_section(config_t *config, char *name) {
     }
   }
   return 0;
+}
+
+pair_t **config_get_pairs(config_t *config, char *key, size_t *count) {
+  pair_t **pairs = 0;
+  section_t *temp_sec = 0;
+  size_t i, j, counter = 0;
+  // precount
+  for(i = 0; i < config->section_count; i++) {
+    temp_sec = &config->sections[i];
+    for(j = 0; j < temp_sec->pair_count; j++) {
+      if(strcmp(temp_sec->pairs[j].key, key) == 0) {
+        ++counter;
+      }
+    }
+  }
+  pairs = (pair_t **) malloc(sizeof(pair_t *) * counter);
+  for(i = 0, counter = 0; i < config->section_count; i++) {
+    temp_sec = &config->sections[i];
+    for(j = 0; j < temp_sec->pair_count; j++) {
+      if(strcmp(temp_sec->pairs[j].key, key) == 0) {
+        pairs[counter] = &temp_sec->pairs[i];
+        ++counter;
+      }
+    }
+  }
+  *count = counter;
+  return pairs;
 }
 
 void config_delete(config_t *config) {
