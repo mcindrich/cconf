@@ -9,6 +9,7 @@ typedef struct {
 } config_t;
 
 void config_create(config_t *config, char *fn);
+section_t *config_get_section(config_t *config, char *name);
 void config_delete(config_t *config);
 
 #endif

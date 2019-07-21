@@ -2,6 +2,7 @@
 #include <cconf/token.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int is_delim(char c) {
   return c == '[' || c == ']' || c == '=' || c == ' ' || c == '\t' || c == '\n';
@@ -174,6 +175,15 @@ void config_create(config_t *config, char *fn) {
   } else {
     // err...
   }
+}
+
+section_t *config_get_section(config_t *config, char *name) {
+  for(int i = 0; i < config->section_count; i++) {
+    if(strcmp(config->sections[i].name, name) == 0) {
+      return &config->sections[i];
+    }
+  }
+  return 0;
 }
 
 void config_delete(config_t *config) {
